@@ -1,0 +1,14 @@
+Bootstrap: docker
+From: continuumio/miniconda3
+
+%files
+smithHunter.yml /requirements.yml
+
+%post
+/opt/conda/bin/conda env update -f /requirements.yml
+
+%runscript
+#!/bin/bash
+. /opt/conda/etc/profile.d/conda.sh
+conda activate /opt/conda/envs/smithHunter_env
+exec "$@"
