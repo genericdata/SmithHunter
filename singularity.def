@@ -1,14 +1,58 @@
 Bootstrap: docker
 From: continuumio/miniconda3
 
-%files
-smithHunter.yml /requirements.yml
+%help
+    This container provides an environment to run the SmithHunter pipeline.
+    It includes necessary dependencies such as Git, Make, a C++ compiler,
+    and the PITA software, alongside the SmithHunter conda environment.
+
+%environment
+    # Set environment variables for the container
+    export WORKDIR=/SmithHunter
+    export PATH=$WORKDIR:$PATH
 
 %post
-/opt/conda/bin/conda env update -f /requirements.yml
+    # Define env variables
+                export WORKDIR=/SmithHunter
+    export CONDA_PKGS_DIRS=${TMPDIR:-/tmp}
+
+    # Conda install prerequisites
+    echo "Installing prerequisites with conda..."
+    /opt/conda/condabin/conda install -y -c conda-forge git make cxx-compiler
+
+    # Clone SmithHunter repository
+    echo "Cloning SmithHunter repository..."
+    git clone --depth 1 --branch singularity https://github.com/genericdata/SmithHunter.git $WORKDIR
+                cd $WORKDIR && chmod +x smithHunterA.sh smithHunterB.sh sharp_smith.R scripts/esplora2.R scripts/Makeplots.R
+
+    # Create Conda environment for SmithHunter
+    echo "Creating Conda environment for SmithHunter..."
+    /opt/conda/condabin/conda env create -f $WORKDIR/smithHunter.yml
+
+    # Install PITA
+    echo "Cloning and installing PITA..."
+    git clone --depth 1 https://github.com/elenacorni/pita $WORKDIR/pita
+    cd $WORKDIR/pita/pita_cpp/
+    make -j$(nproc) install
+
+                # Clean up
+                /opt/conda/condabin/conda uninstall git make cxx-compiler -y
+                /opt/conda/condabin/conda clean --all --yes
 
 %runscript
-#!/bin/bash
-. /opt/conda/etc/profile.d/conda.sh
-conda activate /opt/conda/envs/smithHunter_env
-exec "$@"
+    #!/bin/bash
+    unset -f which
+
+    # Activate the conda environment
+    . /opt/conda/etc/profile.d/conda.sh
+    conda activate /opt/conda/envs/smithHunter_env
+
+    # Default commands start in the SmithHunter directory
+    cd $WORKDIR
+
+    # Check if user wants a bash shell, or if no command is passed
+    if [ "$#" -eq 0 ] || [ "$1" == "bash" ] || [ "$1" == "shell" ]; then
+        exec /bin/bash
+    else
+        exec "$@"
+    fi
