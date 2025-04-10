@@ -13,7 +13,7 @@ From: continuumio/miniconda3
 
 %post
     # Define env variables
-                export WORKDIR=/SmithHunter
+    export WORKDIR=/SmithHunter
     export CONDA_PKGS_DIRS=${TMPDIR:-/tmp}
 
     # Conda install prerequisites
@@ -23,7 +23,7 @@ From: continuumio/miniconda3
     # Clone SmithHunter repository
     echo "Cloning SmithHunter repository..."
     git clone --depth 1 --branch singularity https://github.com/genericdata/SmithHunter.git $WORKDIR
-                cd $WORKDIR && chmod +x smithHunterA.sh smithHunterB.sh sharp_smith.R scripts/esplora2.R scripts/Makeplots.R
+    cd $WORKDIR && chmod +x smithHunterA.sh smithHunterB.sh sharp_smith.R scripts/esplora2.R scripts/Makeplots.R
 
     # Create Conda environment for SmithHunter
     echo "Creating Conda environment for SmithHunter..."
@@ -35,9 +35,9 @@ From: continuumio/miniconda3
     cd $WORKDIR/pita/pita_cpp/
     make -j$(nproc) install
 
-                # Clean up
-                /opt/conda/condabin/conda uninstall git make cxx-compiler -y
-                /opt/conda/condabin/conda clean --all --yes
+    # Clean up
+    /opt/conda/condabin/conda uninstall git make cxx-compiler -y
+    /opt/conda/condabin/conda clean --all --yes
 
 %runscript
     #!/bin/bash
